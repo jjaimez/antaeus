@@ -2,15 +2,15 @@
 
 To start the process that charges a subscription fee every month I used coroutines and to know if it is the first of the month and know the distance to the next first of the month I implemented `TimeService`.  You can modify the return values of its function to simulate different scenarios.
 
-I imagined this app running in multiple servers, so to prevent race conditions I add another invoice status called `IN_PROCESS` as a locking mechanism. The next iteration could has a KVS to lock the invoices. It also could be the case that the app runs multiple coroutines at the same time. The lock also could be used in this scenario. Moreover, I add a function that allows fetching invoices in batch by status.
+I imagined this app running in multiple servers, so to prevent race conditions I add another invoice status called `IN_PROCESS` as a locking mechanism. The next iteration could have a KVS to lock the invoices. It also could be the case that the app runs multiple coroutines at the same time. The lock also could be used in this scenario. Moreover, I add a function that allows fetching invoices in batch by status.
 
-To avoid prevent `CurrencyMismatchException` I added and mocked `CurrencyProvider`. This external provider converts an amount from one currency to another. When `InvoiceCurrency` is different than `Customer.Currency` the app update the invoice currency and value to its customer currency.
+To avoid prevent `CurrencyMismatchException` I added and mocked `CurrencyProvider`. This external provider converts an amount from one currency to another. When `InvoiceCurrency` is different than `Customer.Currency` the app updates the invoice currency and value to its customer currency.
 
 When CustomerNotFoundException arises. The invoice is marked as `INCONSISTENT`. This is a new `InvoiceStatus` which I added. The next release could implement a feature to handle this situation.
 
 When `PaymentService` fails or any other error arises, the Invoice is marked as a `FAIL` and it will be reprocessed after all `PENDING` invoices. The next version could add alarms, metric and a different set of fail status and implements different ways to handle the different errors. Ex. `NetworkException` shouldn't be treated in the same way that an expired card.
 
-I added logs and test to visualize how the app works.
+I added logs and tests to visualize how the app works.
 
 ## Antaeus
 
