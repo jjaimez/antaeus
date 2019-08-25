@@ -12,11 +12,10 @@ import io.pleo.antaeus.models.Customer
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.Money
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.math.BigDecimal
 
 class AntaeusDal(private val db: Database) {
     fun fetchInvoice(id: Int): Invoice? {
@@ -36,6 +35,58 @@ class AntaeusDal(private val db: Database) {
                 .selectAll()
                 .map { it.toInvoice() }
         }
+    }
+
+
+    fun fetchInvoicesByStatus(status: String): List<Invoice> {
+        return transaction(db) {
+            InvoiceTable
+                    .select({InvoiceTable.status.eq(status)})
+                    .map { it.toInvoice() }
+        }
+    }
+
+    fun fetchInvoicesByStatus(status: String, size: Int): List<Invoice> {
+        return transaction(db) {
+            InvoiceTable
+                    .select({InvoiceTable.status.eq(status)})
+                    .fetchSize(size)
+                    .map { it.toInvoice() }
+        }
+    }
+
+
+    fun countInvoicesByStatus(status: String): Int {
+        return transaction(db) {
+            InvoiceTable
+                    .select({InvoiceTable.status.eq(status)})
+                    .count()
+        }
+    }
+
+
+    fun updateStatusInvoice(id: Int, status: String): Invoice? {
+        transaction(db) {
+            InvoiceTable
+                    .update({InvoiceTable.id.eq(id)}) {
+                        it[this.status] = status
+                    }
+
+        }
+
+        return fetchInvoice(id)
+    }
+
+    fun updateCurrencyAndValueInvoice(id: Int, currency: String, value: BigDecimal): Invoice? {
+        transaction(db) {
+            InvoiceTable
+                    .update({InvoiceTable.id.eq(id)}) {
+                        it[this.value] = value
+                        it[this.currency] = currency
+                    }
+
+        }
+        return fetchInvoice(id)
     }
 
     fun createInvoice(amount: Money, customer: Customer, status: InvoiceStatus = InvoiceStatus.PENDING): Invoice? {
